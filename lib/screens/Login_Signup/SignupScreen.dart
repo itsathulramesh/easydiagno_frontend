@@ -2,7 +2,7 @@ import 'package:easydiagno/Models/UserModel/userRegistration.dart';
 import 'package:easydiagno/Services/UserModule/userRegRepo.dart';
 import 'package:easydiagno/screens/Login_Signup/LoginScreen.dart';
 import 'package:easydiagno/widgets/Textfields/customTextField.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -26,35 +26,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final password_controller_signup2 = TextEditingController();
 
   //registration checking using firebase
-  RegistrationCheck() async {
-    try {
-      final userAuth = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: email_controller_signup.text,
-              password: password_controller_signup1.text);
-      userAuth.user!.sendEmailVerification();
-      // await apiRequest();
-      //await userAuth.user!.reload();
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return buildEmailVerificationDialog();
-          });
-      //print("successfully registered");
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Email already Exists"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.all(10),
-          duration: Duration(seconds: 8),
-        ));
-        print("email already regsitered");
-      }
-      print(e.code);
-    }
-  }
+
 
   bool passwordVisible1 = true;
   bool passwordVisible2 = true;
@@ -200,7 +172,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       onPressed: () {
                         if (_formkey.currentState!.validate()) {
                           apiRequest();
-                          //RegistrationCheck();
                         }
                       },
                       style: ButtonStyle(
@@ -272,86 +243,7 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  //Email verification alert
-  AlertDialog buildEmailVerificationDialog() {
-    return AlertDialog(
-      title: Text("Email Verification"),
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Verification email has been sent. Please check your email and click the 'Verified' button once done.",
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton(
-                onPressed: () async {
-                  // Wait for the email verification to complete
-                  await FirebaseAuth.instance.currentUser!.reload();
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user!.emailVerified) {
-                    // Email is verified, proceed with registration
-                    //await apiRequest();
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("Registered successfully"),
-                        backgroundColor: Colors.blue,
-                        behavior: SnackBarBehavior.floating,
-                        margin: EdgeInsets.all(10),
-                        duration: Duration(seconds: 5),
-                      ),
-                    );
-
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) {
-                        return LoginScreen();
-                      }),
-                    );
-                  } else {
-                    // Show a message indicating that the email is not verified
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Email is not verified. Please verify your email before logging in.",
-                        ),
-                        backgroundColor: Colors.red,
-                        behavior: SnackBarBehavior.floating,
-                        margin: EdgeInsets.all(10),
-                        duration: Duration(seconds: 8),
-                      ),
-                    );
-                  }
-                },
-                child: Text("Verified"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  // Resend email verification
-                  final user = FirebaseAuth.instance.currentUser;
-                  await user!.sendEmailVerification();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Verification email resent."),
-                      backgroundColor: Colors.blue,
-                      behavior: SnackBarBehavior.floating,
-                      margin: EdgeInsets.all(10),
-                      duration: Duration(seconds: 5),
-                    ),
-                  );
-                },
-                child: Text("Resend"),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   apiRequest() async {
     final details = UserRegistrationModel(
@@ -362,10 +254,20 @@ class _SignupScreenState extends State<SignupScreen> {
     final status = await userRegistrationApi(details);
     print(status);
     if (status == true) {
-      RegistrationCheck();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Registered successfully. Please Login."),
+          backgroundColor: Colors.blue,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3)));
+      
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) {
+          return LoginScreen();
+        }),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Something went wrong, please try again"),
+          content: Text("Registration Failed. Try again."),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.all(10),

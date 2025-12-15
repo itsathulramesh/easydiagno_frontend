@@ -2,14 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:csc_picker/csc_picker.dart';
+import 'package:csc_picker_plus/csc_picker_plus.dart';
 import 'package:easydiagno/Constants/constants.dart';
 import 'package:easydiagno/Models/HospitalModel/hospitalReg1Model.dart';
 import 'package:easydiagno/Services/hospital%20Module/hospitalReg1Api.dart';
 import 'package:easydiagno/screens/HospitalRegistration/successfullyRegScreen.dart';
 import 'package:easydiagno/screens/Login_Signup/LoginScreen.dart';
 import 'package:easydiagno/widgets/Textfields/hosCustomTextfield.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
@@ -52,34 +52,7 @@ class _HospitalRegistrationState extends State<HospitalRegistration> {
   ValueNotifier isSel = ValueNotifier(true);
   //String? imagebytes;
 
-  RegistrationCheck() async {
-    try {
-      final userAuth = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: _emailController.text, password: '123456');
-      userAuth.user!.sendEmailVerification();
-      // await apiRequest();
-      //await userAuth.user!.reload();
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return buildEmailVerificationDialog();
-          });
-      //print("successfully registered");
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Email already Exists"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.all(10),
-          duration: Duration(seconds: 8),
-        ));
-        print("email already regsitered");
-      }
-      print(e.code);
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -334,82 +307,7 @@ class _HospitalRegistrationState extends State<HospitalRegistration> {
     );
   }
 
-  //Email verification alert
-  AlertDialog buildEmailVerificationDialog() {
-    return AlertDialog(
-      title: Text("Email Verification"),
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Verification email has been sent. Please check your email and click the 'Verified' button once done.",
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton(
-                onPressed: () async {
-                  // Wait for the email verification to complete
-                  await FirebaseAuth.instance.currentUser!.reload();
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user!.emailVerified) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("Registered successfully"),
-                        backgroundColor: Colors.blue,
-                        behavior: SnackBarBehavior.floating,
-                        margin: EdgeInsets.all(10),
-                        duration: Duration(seconds: 5),
-                      ),
-                    );
 
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) {
-                        return Successfullyregistered();
-                      }),
-                    );
-                  } else {
-                    // Show a message indicating that the email is not verified
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Email is not verified. Please verify your email before logging in.",
-                        ),
-                        backgroundColor: Colors.red,
-                        behavior: SnackBarBehavior.floating,
-                        margin: EdgeInsets.all(10),
-                        duration: Duration(seconds: 8),
-                      ),
-                    );
-                  }
-                },
-                child: Text("Verified"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  // Resend email verification
-                  final user = FirebaseAuth.instance.currentUser;
-                  await user!.sendEmailVerification();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Verification email resent."),
-                      backgroundColor: Colors.blue,
-                      behavior: SnackBarBehavior.floating,
-                      margin: EdgeInsets.all(10),
-                      duration: Duration(seconds: 5),
-                    ),
-                  );
-                },
-                child: Text("Resend"),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   regClicked(BuildContext context) async {
     print("hi");
@@ -441,8 +339,27 @@ class _HospitalRegistrationState extends State<HospitalRegistration> {
     // final hos = HospitalregModel(imagePath: imagebytes!, hname: "s", liscenceNum: "s", email: "s", addressLine: "s", pinCode: "s", country: "s", state: "s", city: "s", password: "s");
     String status = await hospitalregistration(hospital);
     print(status);
-    // if (status == true) {
-    //   RegistrationCheck();
-    // }
+    if (status == "success") {
+       ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Registered successfully"),
+            backgroundColor: Colors.blue,
+            behavior: SnackBarBehavior.floating,
+          ),
+       );
+       Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) {
+          return Successfullyregistered();
+        }),
+      );
+    } else {
+       ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Registration Failed"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+       );
+    }
   }
 }

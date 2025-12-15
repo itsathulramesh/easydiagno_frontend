@@ -7,16 +7,28 @@ import 'package:http/http.dart' as http;
 
 Future<LoginResponce?> userLoginApi(UserLoginmodel userlogin) async {
   try {
-    final response = await http.get(Uri.parse(
-        '$baseUrl/login_check?email=${userlogin.email}&password=${userlogin.password}'));
+    final response = await http.post(
+      Uri.parse('$baseUrl/login_check'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "email": userlogin.email,
+        "password": userlogin.password
+      }),
+    );
 
     print("login responce ${response.body}");
     print(response.statusCode);
 
     if (response.statusCode == 200) {
       final _body = jsonDecode(response.body);
-      final resp = LoginResponce.fromJson(_body);
-      return resp;
+      // Check if task is success
+      if (_body['task'] == 'success') {
+          final resp = LoginResponce.fromJson(_body);
+          return resp;
+      } else {
+          print("Login failed: ${_body['msg']}");
+          return null;
+      }
     } else {
       print("else");
       print(response.statusCode);
